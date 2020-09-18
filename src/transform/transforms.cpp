@@ -87,9 +87,17 @@ void transform(const cv::Mat& image, torch::Tensor& tensor_image,
         net_width = transform_params.img_scale_[0];
         net_height = transform_params.img_scale_[1];
         cv::resize(image, image_resize, cv::Size(net_width, net_height));
+        transform_params.vector_scale_factor_.push_back(float(net_width)/image.size().width);
+        transform_params.vector_scale_factor_.push_back(float(net_height)/image.size().height);
+        transform_params.vector_scale_factor_.push_back(float(net_width)/image.size().width);
+        transform_params.vector_scale_factor_.push_back(float(net_height)/image.size().height);
     }
     else if (transform_params.keep_ratio_ == 1) {
         transform_params.scale_factor_ = imrescale(image, image_resize, transform_params.img_scale_, net_width, net_height);
+        transform_params.vector_scale_factor_.push_back(transform_params.scale_factor_);
+        transform_params.vector_scale_factor_.push_back(transform_params.scale_factor_);
+        transform_params.vector_scale_factor_.push_back(transform_params.scale_factor_);
+        transform_params.vector_scale_factor_.push_back(transform_params.scale_factor_);
     }
     //std::cout << "a2: " <<image_resize.rows<<" "<<image_resize.cols<< std::endl;
     bgr = image_resize.at<cv::Vec3b>(100, 100);

@@ -38,11 +38,15 @@ void DetectorSSD::get_min_max_size() {
     int max_ratio = int(ssd_head_params_.basesize_ratio_range_[1] * 100);
     int step = int(floor(max_ratio - min_ratio) / float(ssd_head_params_.anchor_ratios_.size() - 2));
     int r = min_ratio;
-    while(r < max_ratio + 1) {
-        min_sizes_.push_back(int(net_width_ * r / 100));
-        r += step;
-        max_sizes_.push_back(int(net_width_ * r / 100));
+    for (int ratio=int(min_ratio); ratio<int(max_ratio) + 1; ratio+=step){
+        min_sizes_.push_back(int(net_width_ * ratio / 100));
+        max_sizes_.push_back(int(net_width_ * (ratio + step) / 100));
     }
+//    while(r < max_ratio + 1) {
+//        min_sizes_.push_back(int(net_width_ * r / 100));
+//        r += step;
+//        max_sizes_.push_back(int(net_width_ * r / 100));
+//    }
     if (net_width_ == 300) {
         if (abs(ssd_head_params_.basesize_ratio_range_[0]-0.15) <= EPSILON ) {
             min_sizes_.insert(std::begin(min_sizes_), int(net_width_ * 7 / 100));
@@ -62,7 +66,7 @@ void DetectorSSD::get_min_max_size() {
             min_sizes_.insert(std::begin(min_sizes_), int(net_width_ * 7 / 100));
             max_sizes_.insert(std::begin(max_sizes_), int(net_width_ * 15 / 100));
         } else {
-            std::cout << "get_min_max_size failed  512" << std::endl;
+            std::cout << "get_min_max_size failed 512" << std::endl;
         }
     }
 }
@@ -75,7 +79,7 @@ void DetectorSSD::get_anchor_generators(const std::vector<int>& anchor_base_size
          int base_size = min_sizes_[k];
          int stride = anchor_head_params_.anchor_strides_[k];
          std::vector<float> ctr(2);
-         ctr[0] = ctr[1] = (stride - 1) / 2.0;
+         ctr[0] = ctr[1] = stride / 2.0;
          std::vector<float> scales(2);
          scales[0] = 1.0;
          scales[1] = sqrt(float(max_sizes_[k]) / float(min_sizes_[k]));

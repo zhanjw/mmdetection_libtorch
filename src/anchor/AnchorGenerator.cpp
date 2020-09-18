@@ -27,8 +27,8 @@ void AnchorGenerator::gen_base_anchors(){
     float x_ctr;
     float y_ctr;
     if (ctr_.empty()) {
-        x_ctr = 0.5 * (w - 1);
-        y_ctr = 0.5 * (h - 1);
+        x_ctr = 0. * w;
+        y_ctr = 0. * h;
     } else {
         x_ctr = ctr_[0];
         y_ctr = ctr_[1];
@@ -47,8 +47,8 @@ void AnchorGenerator::gen_base_anchors(){
         hs = (h * torch::unsqueeze(scales_, 1) * torch::unsqueeze(h_ratios, 0)).view(-1);
     }
 
-    base_anchors_ = torch::stack({x_ctr - 0.5 * (ws -1), y_ctr - 0.5 * (hs -1), x_ctr + 0.5 * (ws - 1), y_ctr + 0.5 * (hs -1)}, 1);
-    torch::round_(base_anchors_);
+    base_anchors_ = torch::stack({x_ctr - 0.5 * ws, y_ctr - 0.5 * hs, x_ctr + 0.5 * ws, y_ctr + 0.5 * hs}, 1);
+//    torch::round_(base_anchors_);
 }
 
 torch::Tensor AnchorGenerator::grid_anchors(int stride, torch::DeviceType device) {

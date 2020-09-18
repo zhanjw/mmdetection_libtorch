@@ -5,7 +5,7 @@ SET(CMAKE_BUILD_TYPE "debug")
 
 
 # set cuda path
-set(LIB_PATH "/home/dl/3rdparty/")
+set(LIB_PATH "/home/eric/Desktop/libtorch-video-classification/third_path/")
 
 set(CUDA_TOOLKIT_ROOT_DIR "/usr/local/cuda")
 find_package(CUDA REQUIRED)

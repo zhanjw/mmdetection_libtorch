@@ -40,6 +40,8 @@ struct AnchorHeadParams {
     std::vector<int> anchor_strides_;
     std::vector<float> target_means_;
     std::vector<float> target_stds_;
+    std::vector<float> bbox_target_means_;
+    std::vector<float> bbox_target_stds_;
 };
 
 struct RetinaHeadParams {
@@ -74,6 +76,7 @@ struct TransformParams {
     int pad_;
     std::vector<int> img_shape_;
     float scale_factor_;
+    std::vector<float> vector_scale_factor_;
 };
 
 struct RoiExtractorParams {
@@ -96,6 +99,7 @@ public:
 
     DetetorType detector_type_;
     std::string model_path_;
+    std::string save_path_;
     float conf_thresh_;
 
     TransformParams transform_params_;

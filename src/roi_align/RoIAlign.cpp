@@ -16,9 +16,9 @@ RoIAlign::~RoIAlign() {
 
 }
 
-#define CHECK_CUDA(x) AT_CHECK(x.type().is_cuda(), #x, " must be a CUDAtensor ")
+#define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x, " must be a CUDAtensor ")
 #define CHECK_CONTIGUOUS(x) \
-  AT_CHECK(x.is_contiguous(), #x, " must be contiguous ")
+  TORCH_CHECK(x.is_contiguous(), #x, " must be contiguous ")
 #define CHECK_INPUT(x) \
   CHECK_CUDA(x);       \
   CHECK_CONTIGUOUS(x)
@@ -42,7 +42,7 @@ int RoIAlign::roi_align_forward_cuda(at::Tensor features, at::Tensor rois,
   int data_height = features.size(2);
   int data_width = features.size(3);
 
-  ROIAlignForwardLaucher(features, rois, spatial_scale_, sample_num_,
+  ROIAlignForwardLauncher(features, rois, spatial_scale_, sample_num_,
                          num_channels, data_height, data_width, num_rois,
                          pooled_height_, pooled_width_, output);
 

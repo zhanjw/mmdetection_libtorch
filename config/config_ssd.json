@@ -1,6 +1,7 @@
 {
 "DetectorType" : "SSD",
-"modelPath": "/home/dl/Project/mmdetection_libtorch/weights/ssd300_voc_trace.pt",
+"modelPath": "../model/traced_ssd.pt",
+  "savePath": "../model/trt_ssd.ts",
 "conf_thr" : 0.5,
 
 "AnchorHead" : {

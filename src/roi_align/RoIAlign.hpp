@@ -10,7 +10,7 @@
 
 
 extern "C" {
-int ROIAlignForwardLaucher(const at::Tensor features, const at::Tensor rois,
+int ROIAlignForwardLauncher(const at::Tensor features, const at::Tensor rois,
                            const float spatial_scale, const int sample_num,
                            const int channels, const int height,
                            const int width, const int num_rois,
@@ -20,7 +20,7 @@ int ROIAlignForwardLaucher(const at::Tensor features, const at::Tensor rois,
 
 
 extern "C" {
-at::Tensor ROIAlignForwardV2Laucher(const at::Tensor& input,
+at::Tensor ROIAlignForwardV2Launcher(const at::Tensor& input,
                                     const at::Tensor& rois,
                                     const float spatial_scale,
                                     const int pooled_height,

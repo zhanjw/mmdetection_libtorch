@@ -25,6 +25,9 @@ private:
     std::string bone_model_path_;
     std::string shared_model_path_;
     std::string bbox_model_path_;
+    std::string save_bone_model_path_;
+    std::string save_shared_model_path_;
+    std::string save_bbox_model_path_;
 
     bool with_shared_;
     std::unique_ptr<torch::jit::script::Module> bone_module_;

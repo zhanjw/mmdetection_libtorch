@@ -7,6 +7,7 @@
 #include "bbox.hpp"
 #include "transforms.hpp"
 #include "AnchorGenerator.hpp"
+#include <sys/stat.h>
 
 using namespace std::chrono;
 
@@ -31,9 +32,13 @@ protected:
     void get_proposals(torch::Tensor& output, const std::vector<int>& img_shape,
                        torch::Tensor& proposals_bboxes, torch::Tensor&  proposals_scores,
                        bool rpn);
+    inline bool exists(const std::string& name) {
+        struct stat buffer;
+        return (stat (name.c_str(), &buffer) == 0);
+    }
+
 private:
     void init_params();
-
 
 
 protected:
@@ -42,6 +47,7 @@ protected:
 
     DetetorType detector_type_;
     std::string model_path_;
+    std::string save_path_;
     int net_width_;
     int net_height_;
     float conf_thresh_;

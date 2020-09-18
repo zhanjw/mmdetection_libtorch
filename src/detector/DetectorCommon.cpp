@@ -1,4 +1,5 @@
 #include "DetectorCommon.hpp"
+#include "trtorch/trtorch.h"
 
 DetectorCommon::DetectorCommon()
 {
@@ -21,6 +22,7 @@ void DetectorCommon::LoadParams(const Params& params, torch::DeviceType* device_
     init_params();
     device_ = device_type;
     model_path_ = params.model_path_;
+    save_path_ = params.save_path_;
     conf_thresh_ = params.conf_thresh_;
 
     transform_params_ = params.transform_params_;
@@ -32,7 +34,10 @@ void DetectorCommon::LoadParams(const Params& params, torch::DeviceType* device_
 
 
 void DetectorCommon::LoadTracedModule() {
-    module_ = std::make_unique<torch::jit::script::Module>(torch::jit::load(model_path_));
+    if (!exists(save_path_))
+        module_ = std::make_unique<torch::jit::script::Module>(torch::jit::load(model_path_));
+    else
+        module_ = std::make_unique<torch::jit::script::Module>(torch::jit::load(save_path_));
 }
 
 void DetectorCommon::get_anchor_generators(const std::vector<int>& anchor_base_sizes,
@@ -87,7 +92,8 @@ void DetectorCommon::get_proposals(torch::Tensor& output, const std::vector<int>
         int anchor_num = anchor_generators_[k].anchor_nums_;
         end = start + anchor_num;
         torch::Tensor anchors_layer = mlvl_anchors_.slice(0, start, end);
-        torch::Tensor output_layer =output.slice(0, start, end);
+//        std::cout<<"anchors_layer"<<anchors_layer[0]<<std::endl;
+        torch::Tensor output_layer = output.slice(0, start, end);
 
         torch::Tensor score_layer = output_layer.slice(1, 4, digit_nums);
         torch::Tensor loc = output_layer.slice(1, 0, 4);
@@ -106,10 +112,11 @@ void DetectorCommon::get_proposals(torch::Tensor& output, const std::vector<int>
             loc = max_output_layer.slice(1, 0, 4);
             score_layer = max_output_layer.slice(1, 4, digit_nums);
         }
+//        std::cout<<"anchors_layer"<<anchors_layer[0]<<std::endl;
         torch::Tensor proposals_bboxes_layer= delta2bbox(anchors_layer, loc, img_shape, anchor_head_params_.target_means_, anchor_head_params_.target_stds_);
+//        std::cout<<"proposals_bboxes_layer"<<proposals_bboxes_layer[0]<<std::endl;
         if (rpn) {
             torch::Tensor inds = singleclass_nms(torch::cat({proposals_bboxes_layer, score_layer}, 1), anchor_head_params_.nms_thresh_);
-            //std::cout <<"inds:" <<inds.sizes()<<std::endl;
             int num = cv::min(int(inds.sizes()[0]) , rpn_head_params_.nms_post_);
             inds = inds.slice(0, 0, num);
             proposals_bboxes_layer = proposals_bboxes_layer.index_select(0, inds);
@@ -132,15 +139,28 @@ void DetectorCommon::get_proposals(torch::Tensor& output, const std::vector<int>
 void DetectorCommon::DetectOneStage(const cv::Mat& image, std::vector<DetectedBox>& detected_boxes) {
     torch::Tensor tensor_image;
     transform(image, tensor_image, transform_params_, net_width_, net_height_, device_);
-    std::cout << "tensor_image:"<<std::endl;
-    std::cout << (tensor_image.squeeze())[0][100][100] <<std::endl;
+//    std::cout << "tensor_image:"<<std::endl;
+//    std::cout << "tensor_image:"<<tensor_image.sizes()<<std::endl;
+//    std::cout << (tensor_image.squeeze())[0][100][100] <<std::endl;
+
+    //start trtorch
+//    if (!module_->is_training()){
+//        *module_ = trtorch::CompileGraph(*module_, std::vector<trtorch::ExtraInfo::InputRange>({tensor_image.sizes()}));
+//        std::cout<<"save to: "<<save_path_<<std::endl;
+//        module_->save(save_path_);
+//    }
+    //end trtorch
+
     auto start = std::chrono::high_resolution_clock::now();
     torch::Tensor output = module_->forward({tensor_image}).toTensor().squeeze(0);
     auto end = std::chrono::high_resolution_clock::now();
+//    std::cout << "output:" << output.sizes() <<std::endl;
+//    std::cout << "output:" << output[0] <<std::endl;
+
     auto duration = duration_cast<milliseconds>(end - start);
     std::cout << "forward taken : " << duration.count() << " ms" << std::endl;
-    std::cout << output.sizes() << std::endl;
-
+//    std::cout << output.sizes() << std::endl;
+//    std::cout << output[0] << std::endl;
 
     get_anchor_boxes();
     torch::Tensor  proposals_scores;
@@ -150,13 +170,14 @@ void DetectorCommon::DetectOneStage(const cv::Mat& image, std::vector<DetectedBo
 
     if (anchor_head_params_.use_sigmoid_ == 1) {
         torch::Tensor padding = torch::zeros({proposals_scores.sizes()[0], 1}).to(proposals_scores.device());
-        proposals_scores = torch::cat({padding, proposals_scores}, 1);
+        proposals_scores = torch::cat({proposals_scores, padding}, 1);
     }
+    std::cout << transform_params_.vector_scale_factor_ << std::endl;
+    proposals_bboxes /= torch::tensor(transform_params_.vector_scale_factor_).cuda();
 
     torch::Tensor nms_results = multiclass_nms(proposals_bboxes, proposals_scores, anchor_head_params_.score_thresh_,
                                                anchor_head_params_.nms_thresh_,anchor_head_params_.max_per_img_);
-
-    cv::Size2f scale = cv::Size2f(image.size().width / float(net_width_), image.size().height / float(net_height_));
+    cv::Size2f scale = cv::Size2f(1,1);
     bbox2result(nms_results, conf_thresh_, scale, detected_boxes);
 }
 

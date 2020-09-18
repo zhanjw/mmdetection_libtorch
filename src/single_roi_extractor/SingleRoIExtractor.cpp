@@ -27,8 +27,8 @@ void SingleRoIExtractor::build_roi_align_layer() {
     }
 }
 torch::Tensor SingleRoIExtractor::map_roi_levels(const torch::Tensor rois, int num_levels) {
-    torch::Tensor scale = torch::sqrt((rois.select(1, 3) - rois.select(1, 1) + 1) * (rois.select(1, 4) - rois.select(1, 2) + 1));
-    torch::Tensor target_lvls = torch::floor(torch::log(scale / float(finest_scale_) + 1.0e-6 ));
+    torch::Tensor scale = torch::sqrt((rois.select(1, 3) - rois.select(1, 1)) * (rois.select(1, 4) - rois.select(1, 2)));
+    torch::Tensor target_lvls = torch::floor(torch::log2(scale / float(finest_scale_) + 1.0e-6 ));
     target_lvls.clamp_(0,num_levels-1);
     return target_lvls;
 }
@@ -36,8 +36,7 @@ torch::Tensor SingleRoIExtractor::map_roi_levels(const torch::Tensor rois, int n
 torch::Tensor SingleRoIExtractor::bbox_roi_extractor(const std::vector<torch::Tensor>& feats, const torch::Tensor& rois) {
    torch::Tensor target_lvls = map_roi_levels(rois, featmap_strides_.size());
    torch::Tensor roi_feats = feats[0].new_zeros({rois.size(0), out_channels_, out_size_, out_size_});
-
-   for(int i =0 ; i < feats.size() - 1; i++)
+   for(int i =0 ; i < int(feats.size()) - 1; i++)
    {
        std::vector<torch::Tensor> index = torch::where(target_lvls == i);
        torch::Tensor rois_ = rois.index_select(0, index[0]);
@@ -49,7 +48,17 @@ torch::Tensor SingleRoIExtractor::bbox_roi_extractor(const std::vector<torch::Te
 
        torch::Tensor output = feats[i].new_zeros({num_rois, num_channels, out_size_,out_size_});
        roi_align_layers_[i].roi_align_forward_cuda(feats[i], rois_, output);
-       roi_feats.index_select(0, index[0]) = output;
+//       std::cout<<"output"<<output.sizes()<<std::endl;
+//       std::cout<<"output"<<output[0][0]<<std::endl;
+//       std::cout<<"output"<<output[0][1]<<std::endl;
+//       std::cout<<"output"<<output[0][2]<<std::endl;
+       for (int _idx=0;_idx<index[0].size(0);_idx++){
+           roi_feats[index[0][_idx]]=output[_idx];
+       }
+//       roi_feats.index_select(0, index[0]) = output;
+//       std::cout<<"after"<<roi_feats.index_select(0, index[0])[0][0]<<std::endl;
+//       std::cout<<"after"<<roi_feats.index_select(0, index[0])[0][1]<<std::endl;
+//       std::cout<<"after"<<roi_feats.index_select(0, index[0])[0][2]<<std::endl;
    }
 
    return roi_feats;

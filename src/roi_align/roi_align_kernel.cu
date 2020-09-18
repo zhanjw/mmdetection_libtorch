@@ -79,14 +79,15 @@ __global__ void ROIAlignForwardV1(
 
     const scalar_t *offset_bottom_rois = bottom_rois + n * 5;
     int roi_batch_ind = offset_bottom_rois[0];
-    scalar_t roi_start_w = offset_bottom_rois[1] * spatial_scale;
-    scalar_t roi_start_h = offset_bottom_rois[2] * spatial_scale;
-    scalar_t roi_end_w = (offset_bottom_rois[3] + 1) * spatial_scale;
-    scalar_t roi_end_h = (offset_bottom_rois[4] + 1) * spatial_scale;
+    scalar_t offset = 0.5;
+    scalar_t roi_start_w = offset_bottom_rois[1] * spatial_scale - offset;
+    scalar_t roi_start_h = offset_bottom_rois[2] * spatial_scale - offset;
+    scalar_t roi_end_w = offset_bottom_rois[3] * spatial_scale - offset;
+    scalar_t roi_end_h = offset_bottom_rois[4] * spatial_scale - offset;
 
     // Force malformed ROIs to be 1x1
-    scalar_t roi_width = fmaxf((scalar_t)roi_end_w - roi_start_w, 0.);
-    scalar_t roi_height = fmaxf((scalar_t)roi_end_h - roi_start_h, 0.);
+    scalar_t roi_width = fmaxf((scalar_t)roi_end_w - roi_start_w, 1.);
+    scalar_t roi_height = fmaxf((scalar_t)roi_end_h - roi_start_h, 1.);
 
     scalar_t bin_size_h = roi_height / pooled_height;
     scalar_t bin_size_w = roi_width / pooled_width;
@@ -119,7 +120,7 @@ __global__ void ROIAlignForwardV1(
   }
 }
 
-int ROIAlignForwardLaucher(const torch::Tensor features, const torch::Tensor rois,
+int ROIAlignForwardLauncher(const torch::Tensor features, const torch::Tensor rois,
                            const float spatial_scale, const int sample_num,
                            const int channels, const int height,
                            const int width, const int num_rois,
@@ -127,7 +128,7 @@ int ROIAlignForwardLaucher(const torch::Tensor features, const torch::Tensor roi
                            torch::Tensor output) {
   const int output_size = num_rois * pooled_height * pooled_width * channels;
   AT_DISPATCH_FLOATING_TYPES_AND_HALF(
-      features.scalar_type(), "ROIAlignLaucherForward", ([&] {
+      features.scalar_type(), "ROIAlignLauncherForward", ([&] {
         const scalar_t *bottom_data = features.data<scalar_t>();
         const scalar_t *rois_data = rois.data<scalar_t>();
         scalar_t *top_data = output.data<scalar_t>();
@@ -139,7 +140,7 @@ int ROIAlignForwardLaucher(const torch::Tensor features, const torch::Tensor roi
                 sample_num, channels, height, width, pooled_height,
                 pooled_width, top_data);
       }));
-  //std::cout<<cudaGetLastError()<<std::endl;
-  //THCudaCheck(cudaGetLastError());
+//  std::cout<<cudaGetLastError()<<std::endl;
+//  THCudaCheck(cudaGetLastError());
   return 1;
 }

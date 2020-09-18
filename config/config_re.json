@@ -1,6 +1,7 @@
 {
 "DetectorType" : "Retinanet",
-"modelPath": "/home/dl/Project/mmdetection-master/trace/retinanet_voc_trace.pt",
+"modelPath": "../model/tracedpoint.pt",
+"savePath": "../model/trt_retina.ts",
 "conf_thr" : 0.3,
 
 "AnchorHead" : {
@@ -12,8 +13,8 @@
     "max_per_img"  : 100,
 
     "anchor_strides"  : [8, 16, 32, 64, 128],
-    "target_means" : [0.0, 0.0, 0.0, 0.0],
-    "target_stds" : [0.1, 0.1, 0.1, 0.1]
+  "target_means" : [0.0, 0.0, 0.0, 0.0],
+  "target_stds" : [1.0, 1.0, 1.0, 1.0]
 },
 
 "RetinaHead": {

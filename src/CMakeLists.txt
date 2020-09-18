@@ -7,13 +7,20 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler -D__CUDA_NO_HALF_OPERATORS_
 # CUDA
 find_package(CUDA REQUIRED)
 include_directories(${CUDA_INCLUDE_DIRS})
-#message("CUDA_INCLUDE_DIRS" ${CUDA_INCLUDE_DIRS})
+message("CUDA_INCLUDE_DIRS" ${CUDA_INCLUDE_DIRS})
 
 
 #opencv
-set(OpenCV_DIR "/usr/share/OpenCV")
+set(OpenCV_DIR "/home/eric/Desktop/libtorch-video-classification/third_path/opencv/")
 find_package(OpenCV  REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(${OpenCV_INCLUDE_DIR})
+message("OpenCV_INCLUDE_DIRS" ${OpenCV_INCLUDE_DIRS})
+
+#trtorch
+set(TRTorch_INCLUDE_DIR "/home/eric/Desktop/libtorch-video-classification/third_path/trtorch/include/")
+include_directories(${TRTorch_INCLUDE_DIR})
+set(TRTorch_LIBS "/home/eric/Desktop/libtorch-video-classification/third_path/trtorch/lib/libtrtorch.so")
+set(TensorRT_LIBS "/home/eric/Desktop/libtorch-video-classification/third_path/TensorRT/lib/libnvinfer.so.7")
 
 # 项目头文件目录
 set(PROJECT_INCLUDES
@@ -59,7 +66,8 @@ set(SRC
     ./utils/jsoncpp.cpp
     )
 
-set(DEP_LIBS  ${TORCH_LIBRARIES} ${CUDA_LIBRARIES} ${OpenCV_LIBS})
+#set(DEP_LIBS ${TORCH_LIBRARIES} ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${TensorRT_LIBS})
+set(DEP_LIBS ${TORCH_LIBRARIES} ${CUDA_LIBRARIES} ${OpenCV_LIBS} ${TRTorch_LIBS} ${TensorRT_LIBS})
 
 # 编译库, 输出到 ${CMAKE_BINARY_DIR}/lib
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)

@@ -60,10 +60,18 @@ void ReadAnchorHeadParams(const Value& root, AnchorHeadParams& anchor_head) {
     for (const auto & target_means_array: target_means_arrays) {
         anchor_head.target_means_.push_back(target_means_array.asFloat());
     }
+    const Value bbox_target_means_arrays = root["AnchorHead" ]["bbox_target_means"];
+    for (const auto & bbox_target_means_array: bbox_target_means_arrays) {
+        anchor_head.bbox_target_means_.push_back(bbox_target_means_array.asFloat());
+    }
     //target_stds_;
     const Value target_stds_arrays = root["AnchorHead" ]["target_stds"];
     for (const auto & target_stds_array: target_stds_arrays) {
         anchor_head.target_stds_.push_back(target_stds_array.asFloat());
+    }
+    const Value bbox_target_stds_arrays = root["AnchorHead" ]["bbox_target_stds"];
+    for (const auto & bbox_target_stds_array: bbox_target_stds_arrays) {
+        anchor_head.bbox_target_stds_.push_back(bbox_target_stds_array.asFloat());
     }
     //nms_pre_;
     anchor_head.nms_pre_ = root["AnchorHead" ]["nms_pre"].asInt();
@@ -158,6 +166,7 @@ int Params::Read(const std::string& config_file) {
     }
     detector_type_ = static_cast<DetetorType>(type_ids );
     model_path_ = root["modelPath"].asString();
+    save_path_ = root["savePath"].asString();
     conf_thresh_ = root["conf_thr"].asFloat();
 
 

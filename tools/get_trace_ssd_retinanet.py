@@ -13,11 +13,7 @@ def parse_args():
     parser.add_argument(
         '--checkpoint', help='the checkpoint file to trace')
     parser.add_argument(
-        '--tracedbone', help='the name of tracedpoint')
-    parser.add_argument(
-        '--tracedshared', help='the name of tracedpoint')
-    parser.add_argument(
-        '--tracedbbox', help='the name of tracedpoint')
+        '--tracedpoint', help='the name of tracedpoint')
     parser.add_argument(
         '--shape',
         type=int,
@@ -42,32 +38,28 @@ def main():
     model = build_detector(
         cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg).cuda()
 
+
     if hasattr(model, 'forward_trace'):
         model.forward = model.forward_trace
     else:
-        raise NotImplementedError(
-            'FLOPs counter is currently not currently supported with {}'.
-            format(model.__class__.__name__))
+        raise NotImplementedError
 
+    # print(model)
     checkpoint = torch.load(args.checkpoint)
     model.load_state_dict(checkpoint['state_dict'])
     model.eval()
 
+    print("=====================tracedpoint===========================")
     img = torch.rand(input_shape).cuda()
-    traced_bone = torch.jit.trace(model, img)
-    traced_bone.save(args.tracedbone)
+    # print(img)
+    traced_model = torch.jit.trace(model, img)
+    traced_model.save(args.tracedpoint)
 
-    bbox_feats = torch.rand(1000, 256, 7, 7).cuda()
-    if model.with_shared_head:
-        traced_shared = torch.jit.trace(model.shared_head, bbox_feats)
-        traced_shared.save(args.tracedshared)
-
-    traced_bbox = torch.jit.trace(model.bbox_head, bbox_feats)
-    traced_bbox.save(args.tracedbbox)
-
-
-
-
+    # print("=====================inference_detector===========================")
+    # from mmdet.apis import inference_detector, init_detector
+    # model = init_detector(
+    #     args.config, args.checkpoint, device=torch.device('cuda', 0))
+    # result = inference_detector(model, "/run/media/eric/DATA/industrial/mmdetection/demo/demo.jpg")
 
 if __name__ == '__main__':
     main()
